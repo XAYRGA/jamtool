@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32505.173
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jam", "jam\jam.csproj", "{DCC789ED-FEE9-4CF0-9885-0491AC88753E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DCC789ED-FEE9-4CF0-9885-0491AC88753E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCC789ED-FEE9-4CF0-9885-0491AC88753E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCC789ED-FEE9-4CF0-9885-0491AC88753E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCC789ED-FEE9-4CF0-9885-0491AC88753E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DA1D8392-DE8D-495E-A498-F972792EEE57}
+	EndGlobalSection
+EndGlobal
