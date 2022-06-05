@@ -71,11 +71,79 @@ namespace jam.jaudio
 
             rd.BaseStream.Position = wbctOffset;
             loadWbct(rd);
-        }       
+        }
+
+
+        private int writeWinf(BeBinaryWriter wr)
+        {
+            for (int i=0; i < Groups.Length;i++)
+                Groups[i].WriteToStream(wr);
+
+            var winfOffs = (int)wr.BaseStream.Position;
+            wr.Write(WINF);
+            wr.Write(Groups.Length);
+
+            for (int i = 0; i < Groups.Length; i++)
+                wr.Write(Groups[i].mBaseAddress);
+
+            return winfOffs;
+        }
+
+
+        private int writeWbct(BeBinaryWriter wr)
+        {
+            for (int i = 0; i < Scenes.Length; i++)
+                Scenes[i].WriteToStream(wr);
+
+
+            util.padTo(wr, 32);
+            var wbctOffs = (int)wr.BaseStream.Position;
+            wr.Write(WBCT);
+            wr.Write(0);
+            wr.Write(Scenes.Length);
+
+            for (int i = 0; i < Scenes.Length; i++)
+                wr.Write(Scenes[i].mBaseAddress);
+
+            return wbctOffs;
+        }
+
+        public void WriteToStream(BeBinaryWriter wr)
+        {
+            wr.Write(WSYS);
+            var ret = wr.BaseStream.Position;
+            wr.Write(0); // size
+            wr.Write(0); // id
+            wr.Write(0); // total 
+            wr.Write(0); // wbct
+            wr.Write(0); // winf
+
+            util.padTo(wr, 32);
+
+            var winfOffs = writeWinf(wr);
+            var wbctOffs = writeWbct(wr);
+            var size = (int)wr.BaseStream.Position;
+
+            // Calculate highest waveid.
+            var highest = 0;
+            for (int i = 0; i < Scenes.Length; i++)
+                for (int b = 0; b < Scenes[i].DEFAULT.Length; b++)
+                    if (Scenes[i].DEFAULT[b].WaveID > highest)
+                        highest = Scenes[i].DEFAULT[b].WaveID;
+
+            wr.BaseStream.Position = ret;
+            wr.Write(size);
+            wr.Write(id);
+            wr.Write(highest);
+            wr.Write(wbctOffs);
+            wr.Write(winfOffs);
+            wr.BaseStream.Position = size;
+
+        }
 
     }
 
-    public class WSYSScene
+    public class WSYSScene : JAMBaseSerializable
     {
 
         private const int SCNE = 0x53434E45;
@@ -96,12 +164,24 @@ namespace jam.jaudio
             var count = rd.ReadInt32();
             var waves = new WSYSWaveID[count];
             var offsets = util.readInt32Array(rd, count);
-            for (int i=0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 rd.BaseStream.Position = offsets[i];
                 waves[i] = WSYSWaveID.CreateFromStream(rd);
             }
             return waves;
+        }
+
+        private void writeContainer(BeBinaryWriter wr, int type, WSYSWaveID[] outw)
+        {
+
+            for (int i = 0; i < outw.Length; i++)
+                outw[i].WriteToStream(wr);
+            util.padTo(wr, 32);
+            wr.Write(type);
+            wr.Write(outw.Length);
+            for (int i = 0; i < outw.Length; i++)
+                wr.Write(outw[i].mBaseAddress);
         }
 
         public static WSYSScene CreateFromStream(BeBinaryReader rd)
@@ -129,9 +209,24 @@ namespace jam.jaudio
             STATIC = loadContainer(rd, C_ST);
         }
 
-        public void WriteToStream(BeBinaryWriter wr)
+        public override void WriteToStream(BeBinaryWriter wr)
         {
-        
+            var cdfOffset = (int)wr.BaseStream.Position;
+            writeContainer(wr, C_DF, DEFAULT);
+
+            var cexOffset = (int)wr.BaseStream.Position;
+            writeContainer(wr, C_EX, EXTENDED);
+
+            var cstOffset = (int)wr.BaseStream.Position;
+            writeContainer(wr, C_ST, STATIC);
+
+            util.padTo(wr, 32);
+            mBaseAddress = (int)wr.BaseStream.Position;
+            wr.Write(SCNE);
+            wr.Write(0L);
+            wr.Write(cdfOffset);
+            wr.Write(cexOffset);
+            wr.Write(cstOffset);
         }
     }
 
@@ -168,28 +263,22 @@ namespace jam.jaudio
         }
 
         public override void WriteToStream(BeBinaryWriter wr)
-        {
+        { 
+            // We write the waves first so their offsets are allocated
+            for (int i = 0; i < waves.Length; i++)
+                waves[i].WriteToStream(wr);
+
+            util.padTo(wr, 32);
+
             mBaseAddress = (int)wr.BaseStream.Position;
             byte[] buff = new byte[0x70];
             for (int i=0; i < awPath.Length; i++)
                 buff[i] = (byte)awPath[i];
             wr.Write(buff);
             wr.Write(waves.Length);
-            var retBase = wr.BaseStream.Position;
-
-            for (int i = 0; i < waves.Length; i++)
-                wr.Write(0xDEADBEEF);
-
-            for (int i = 0; i < waves.Length; i++)
-                waves[i].WriteToStream(wr);
-
-            var endRet = wr.BaseStream.Position;
-            wr.BaseStream.Position = retBase;
 
             for (int i = 0; i < waves.Length; i++)
                 wr.Write(waves[i].mBaseAddress);
-
-            wr.BaseStream.Position = endRet;
         }
     }
 
@@ -218,6 +307,7 @@ namespace jam.jaudio
             mBaseAddress = (int)wr.BaseStream.Position;
             wr.Write(GroupID);
             wr.Write(WaveID);
+            wr.Write(new byte[0x2C]); // Empty?
             wr.Write(0xCCCCCCCC); // Uninitialized stack
             wr.Write(0xFFFFFFFF); // nice
         }
@@ -259,6 +349,7 @@ namespace jam.jaudio
             rd.ReadInt32(); // Zero.
             rd.ReadInt32(); // 0xCCCCCCCC Uninitialized stack
         }
+
         public static WSYSWave CreateFromStream(BeBinaryReader rd)
         {
             var b = new WSYSWave();
@@ -284,7 +375,6 @@ namespace jam.jaudio
             wr.Write(0);
             wr.Write(0xCCCCCCCC);
         }
-
     }
 }
 
