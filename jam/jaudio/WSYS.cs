@@ -40,11 +40,11 @@ namespace jam.jaudio
             rd.ReadInt32(); // Empty?
             var count = rd.ReadInt32();
             var ptrs = util.readInt32Array(rd, count);
-            Groups = new WSYSGroup[count];
+            Scenes = new WSYSScene[count];
             for (int i = 0; i < count; i++)
             {
                 rd.BaseStream.Position = ptrs[i];
-                Groups[i] = WSYSGroup.CreateFromStream(rd);
+                Scenes[i] = WSYSScene.CreateFromStream(rd);
             }
         }
 
@@ -79,6 +79,8 @@ namespace jam.jaudio
             for (int i=0; i < Groups.Length;i++)
                 Groups[i].WriteToStream(wr);
 
+
+            util.padTo(wr, 32);
             var winfOffs = (int)wr.BaseStream.Position;
             wr.Write(WINF);
             wr.Write(Groups.Length);
@@ -94,7 +96,6 @@ namespace jam.jaudio
         {
             for (int i = 0; i < Scenes.Length; i++)
                 Scenes[i].WriteToStream(wr);
-
 
             util.padTo(wr, 32);
             var wbctOffs = (int)wr.BaseStream.Position;
@@ -122,6 +123,8 @@ namespace jam.jaudio
 
             var winfOffs = writeWinf(wr);
             var wbctOffs = writeWbct(wr);
+          
+    
             var size = (int)wr.BaseStream.Position;
 
             // Calculate highest waveid.
@@ -135,12 +138,13 @@ namespace jam.jaudio
             wr.Write(size);
             wr.Write(id);
             wr.Write(highest);
-            wr.Write(wbctOffs);
             wr.Write(winfOffs);
+            wr.Write(wbctOffs);
+   
             wr.BaseStream.Position = size;
 
+            util.padTo(wr, 32);
         }
-
     }
 
     public class WSYSScene : JAMBaseSerializable
@@ -172,16 +176,19 @@ namespace jam.jaudio
             return waves;
         }
 
-        private void writeContainer(BeBinaryWriter wr, int type, WSYSWaveID[] outw)
+        private int writeContainer(BeBinaryWriter wr, int type, WSYSWaveID[] outw)
         {
 
             for (int i = 0; i < outw.Length; i++)
                 outw[i].WriteToStream(wr);
             util.padTo(wr, 32);
+            var pos = (int) wr.BaseStream.Position;
             wr.Write(type);
             wr.Write(outw.Length);
             for (int i = 0; i < outw.Length; i++)
                 wr.Write(outw[i].mBaseAddress);
+
+            return pos; 
         }
 
         public static WSYSScene CreateFromStream(BeBinaryReader rd)
@@ -211,14 +218,10 @@ namespace jam.jaudio
 
         public override void WriteToStream(BeBinaryWriter wr)
         {
-            var cdfOffset = (int)wr.BaseStream.Position;
-            writeContainer(wr, C_DF, DEFAULT);
+            var cdfOffset = writeContainer(wr, C_DF, DEFAULT);
+            var cexOffset = writeContainer(wr, C_EX, EXTENDED);
+            var cstOffset = writeContainer(wr, C_ST, STATIC);
 
-            var cexOffset = (int)wr.BaseStream.Position;
-            writeContainer(wr, C_EX, EXTENDED);
-
-            var cstOffset = (int)wr.BaseStream.Position;
-            writeContainer(wr, C_ST, STATIC);
 
             util.padTo(wr, 32);
             mBaseAddress = (int)wr.BaseStream.Position;
@@ -316,9 +319,9 @@ namespace jam.jaudio
 
     public class WSYSWave : JAMBaseSerializable
     {
-        public ushort format;
-        public ushort key;
-        public double sampleRate;
+        public byte format;
+        public byte key;
+        public float sampleRate;
         public int sampleCount;
 
         public int awOffset;
@@ -341,11 +344,13 @@ namespace jam.jaudio
             sampleRate = rd.ReadSingle();
             awOffset = rd.ReadInt32();
             awLength = rd.ReadInt32();
-            loop = rd.ReadInt32() > 0;
+            loop = rd.ReadUInt32() == 0xFFFFFFFF;
             loop_start = rd.ReadInt32();
             loop_end = rd.ReadInt32();
+            sampleCount = rd.ReadInt32();
             last = rd.ReadInt16();
             penult = rd.ReadInt16();
+           
             rd.ReadInt32(); // Zero.
             rd.ReadInt32(); // 0xCCCCCCCC Uninitialized stack
         }
@@ -370,6 +375,7 @@ namespace jam.jaudio
             wr.Write(loop ? 0xFFFFFFFF : 0);
             wr.Write(loop_start);
             wr.Write(loop_end);
+            wr.Write(sampleCount);
             wr.Write(last);
             wr.Write(penult);
             wr.Write(0);

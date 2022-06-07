@@ -49,7 +49,7 @@ namespace jam
 
         public static void padTo(BeBinaryWriter bw, int padding)
         {
-            while ( (bw.BaseStream.Length%padding) != 0)
+            while ( (bw.BaseStream.Position%padding) != 0)
                 bw.Write((byte)0x00);
         }
     }

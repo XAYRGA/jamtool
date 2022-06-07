@@ -1,6 +1,6 @@
 ﻿namespace jam
 {
-    partial class Form1
+    partial class JamMain
     {
         /// <summary>
         ///  Required designer variable.
@@ -30,9 +30,11 @@
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.asdfjakdgkjadgadgToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.AudioTree = new System.Windows.Forms.TreeView();
+            this.openAADialog = new System.Windows.Forms.OpenFileDialog();
+            this.mnuLayoutPanel = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -47,31 +49,52 @@
             // 
             // fileToolStripMenuItem
             // 
+            this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.asdfjakdgkjadgadgToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
-            // pictureBox1
+            // asdfjakdgkjadgadgToolStripMenuItem
             // 
-            this.pictureBox1.Location = new System.Drawing.Point(216, 161);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(100, 50);
-            this.pictureBox1.TabIndex = 1;
-            this.pictureBox1.TabStop = false;
+            this.asdfjakdgkjadgadgToolStripMenuItem.Name = "asdfjakdgkjadgadgToolStripMenuItem";
+            this.asdfjakdgkjadgadgToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.asdfjakdgkjadgadgToolStripMenuItem.Text = "Open";
+            this.asdfjakdgkjadgadgToolStripMenuItem.Click += new System.EventHandler(this.openToolMenu);
             // 
-            // Form1
+            // AudioTree
+            // 
+            this.AudioTree.Location = new System.Drawing.Point(12, 27);
+            this.AudioTree.Name = "AudioTree";
+            this.AudioTree.Size = new System.Drawing.Size(213, 741);
+            this.AudioTree.TabIndex = 1;
+            this.AudioTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.AudioTree_AfterSelect);
+            // 
+            // openAADialog
+            // 
+            this.openAADialog.FileName = "openFileDialog1";
+            // 
+            // mnuLayoutPanel
+            // 
+            this.mnuLayoutPanel.Location = new System.Drawing.Point(231, 27);
+            this.mnuLayoutPanel.Name = "mnuLayoutPanel";
+            this.mnuLayoutPanel.Size = new System.Drawing.Size(576, 741);
+            this.mnuLayoutPanel.TabIndex = 2;
+            // 
+            // JamMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(819, 780);
-            this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.mnuLayoutPanel);
+            this.Controls.Add(this.AudioTree);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Name = "Form1";
+            this.Name = "JamMain";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.JamMain_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -81,6 +104,9 @@
 
         private MenuStrip menuStrip1;
         private ToolStripMenuItem fileToolStripMenuItem;
-        private PictureBox pictureBox1;
+        private ToolStripMenuItem asdfjakdgkjadgadgToolStripMenuItem;
+        private TreeView AudioTree;
+        private OpenFileDialog openAADialog;
+        private Panel mnuLayoutPanel;
     }
 }

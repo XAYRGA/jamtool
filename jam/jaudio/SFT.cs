@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace jam.jaudio
 {
-    public class SFTEntry : JAMBaseSerializable
+    public class BinaryStreamMapEntry : JAMBaseSerializable
     {
         public string name;
         public int size;
@@ -53,18 +53,18 @@ namespace jam.jaudio
             writer.Write(0l);
         }
 
-        public static SFTEntry CreateFromStream(BeBinaryReader rd)
+        public static BinaryStreamMapEntry CreateFromStream(BeBinaryReader rd)
         {
-            var b = new SFTEntry();
+            var b = new BinaryStreamMapEntry();
             b.loadFromStream(rd);
             return b;
         }
     }
 
-    public class SFT : JAMBaseSerializable
+    public class BinaryStreamMap : JAMBaseSerializable
     {
         public int count;
-        public SFTEntry[] entries;
+        public BinaryStreamMapEntry[] entries;
 
         public void loadFromStream(BeBinaryReader read)
         {
@@ -74,9 +74,9 @@ namespace jam.jaudio
             read.ReadUInt64();
             read.ReadUInt32(); // skip bytes. 
             Debug.WriteLine($"Start read at 0x{read.BaseStream.Position:X}");
-            entries = new SFTEntry[count];
+            entries = new BinaryStreamMapEntry[count];
             for (int i = 0; i < count; i++)
-                (entries[i] = new SFTEntry()).loadFromStream(read);
+                (entries[i] = new BinaryStreamMapEntry()).loadFromStream(read);
             
         }
 
@@ -91,9 +91,9 @@ namespace jam.jaudio
             writer.Write(0l);
         }
 
-        public static SFT CreateFromStream(BeBinaryReader rd)
+        public static BinaryStreamMap CreateFromStream(BeBinaryReader rd)
         {
-            var b = new SFT();
+            var b = new BinaryStreamMap();
             b.loadFromStream(rd);
             return b;
         }

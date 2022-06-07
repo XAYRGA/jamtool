@@ -1,13 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="jaudio\JASE.cs" />
+    <Compile Remove="jaudio\JBST.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="jaudio\JASE.cs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="jaudio\JBST.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="newtonsoft.json" Version="13.0.1" />

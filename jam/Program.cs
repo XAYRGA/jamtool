@@ -1,3 +1,6 @@
+using Be.IO;
+
+
 namespace jam
 {
     internal static class Program
@@ -10,8 +13,8 @@ namespace jam
         {
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
-            ApplicationConfiguration.Initialize();
-            Application.Run(new JAMSplash());
+           ApplicationConfiguration.Initialize();
+           Application.Run(new JAMSplash());
         }
     }
 }

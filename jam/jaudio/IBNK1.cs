@@ -22,7 +22,9 @@ namespace jam.jaudio
         public uint size = 0;
         public uint globalID = 0;
         public JInstrument[] instruments = new JInstrument[0xF0];
- 
+        public Dictionary<int, JInstrumentOscillatorv1> oscillators = new Dictionary<int, JInstrumentOscillatorv1>();
+        public Dictionary<int, JInstrumentEnvelopev1> envelopes = new Dictionary<int, JInstrumentEnvelopev1>();
+
 
         public void loadFromStream(BeBinaryReader reader)
         {
@@ -40,6 +42,9 @@ namespace jam.jaudio
                 if (instPtrs[i] != 0)
                     instruments[i] = JInstrument.CreateFromStream(reader, mountpos);
              }
+
+
+
         }
 
         public static JInstrumentBankv1 CreateFromStream(BeBinaryReader reader)

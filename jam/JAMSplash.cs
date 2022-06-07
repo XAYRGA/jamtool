@@ -24,7 +24,7 @@ namespace jam
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            var b = new Form1();
+            var b = new JamMain();
            
             timer1.Enabled = false;
             this.Hide();
