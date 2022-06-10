@@ -22,12 +22,15 @@ namespace jam.jaudio
         public uint size = 0;
         public uint globalID = 0;
         public JInstrument[] instruments = new JInstrument[0xF0];
-        public Dictionary<int, JInstrumentOscillatorv1> oscillators = new Dictionary<int, JInstrumentOscillatorv1>();
-        public Dictionary<int, JInstrumentEnvelopev1> envelopes = new Dictionary<int, JInstrumentEnvelopev1>();
+        public List<JInstrumentOscillatorv1> Oscillators = new List<JInstrumentOscillatorv1>();
+        public List<JInstrumentEnvelopev1> Envelopes = new List<JInstrumentEnvelopev1> ();
+        public List<JInstrumentRandEffectv1> RandomEffects = new List<JInstrumentRandEffectv1> ();
+        public List<JInstrumentSenseEffectv1> SensorEffects = new List<JInstrumentSenseEffectv1>();
 
 
         public void loadFromStream(BeBinaryReader reader)
         {
+            Console.WriteLine("BANK PARSE FROM STREAM");
             int mountpos = (int)reader.BaseStream.Position;
             if (reader.ReadUInt32() != IBNK)
                 throw new InvalidDataException("Data is not IBNK!");
@@ -37,14 +40,94 @@ namespace jam.jaudio
             if (reader.ReadUInt32() != BANK)
                 throw new InvalidDataException("Data is not BANK");
             var instPtrs = util.readInt32Array(reader, 0xF0);
-            for (int i = 0; i < 0xF0; i++) {
+            for (int i = 0; i < 0xF0; i++)
+            {
                 reader.BaseStream.Position = instPtrs[i] + mountpos;
                 if (instPtrs[i] != 0)
                     instruments[i] = JInstrument.CreateFromStream(reader, mountpos);
-             }
+            }
+
+            dereferenceObjectTables();
+        }
+
+        private void dereferenceObjectTables()
+        {
+
+            var oscDedupe = new Dictionary<int, JInstrumentOscillatorv1>();
+            var envDedupe = new Dictionary<int, JInstrumentEnvelopev1>();
+            var randDedupe = new Dictionary<int, JInstrumentRandEffectv1>();
+            var sensDedupe = new Dictionary<int, JInstrumentSenseEffectv1>();
+
+            for (int i = 0; i < instruments.Length; i++)
+            {
+                var cInst = instruments[i];
+                if (cInst == null || cInst.Percussion == true)
+                    continue;
+
+                var ins = (JStandardInstrumentv1)cInst;
+                if (ins.oscillatorA != null)
+                    if (oscDedupe.ContainsKey(ins.oscillatorA.mBaseAddress))
+                        ins.oscillatorA = oscDedupe[ins.oscillatorA.mBaseAddress];
+                    else
+                    {
+                        oscDedupe[ins.oscillatorA.mBaseAddress] = ins.oscillatorA;
+                        if (ins.oscillatorA.Attack != null)
+                            if (!envDedupe.ContainsKey(ins.oscillatorA.Attack.mBaseAddress))
+                                envDedupe[ins.oscillatorA.Attack.mBaseAddress] = ins.oscillatorA.Attack;
+                        if (ins.oscillatorA.Release != null)
+                            if (!envDedupe.ContainsKey(ins.oscillatorA.Release.mBaseAddress))
+                                envDedupe[ins.oscillatorA.Release.mBaseAddress] = ins.oscillatorA.Release;
+                    }
 
 
+                if (ins.oscillatorB != null)
+                    if (oscDedupe.ContainsKey(ins.oscillatorB.mBaseAddress))
+                        ins.oscillatorB = oscDedupe[ins.oscillatorB.mBaseAddress];
+                    else
+                    {
+                        oscDedupe[ins.oscillatorB.mBaseAddress] = ins.oscillatorB;
+                        if (ins.oscillatorB.Attack != null)
+                            if (!envDedupe.ContainsKey(ins.oscillatorB.Attack.mBaseAddress))
+                                envDedupe[ins.oscillatorB.Attack.mBaseAddress] = ins.oscillatorB.Attack;
+                        if (ins.oscillatorB.Release != null)
+                            if (!envDedupe.ContainsKey(ins.oscillatorB.Release.mBaseAddress))
+                                envDedupe[ins.oscillatorB.Release.mBaseAddress] = ins.oscillatorB.Release;
+                    }
 
+
+                if (ins.randA != null)
+                    if (randDedupe.ContainsKey(ins.randA.mBaseAddress))
+                        ins.randA = randDedupe[ins.randA.mBaseAddress];
+                    else
+                        randDedupe[ins.randA.mBaseAddress] = ins.randA;
+
+                if (ins.randB != null)
+                    if (randDedupe.ContainsKey(ins.randB.mBaseAddress))
+                        ins.randB = randDedupe[ins.randB.mBaseAddress];
+                    else
+                        randDedupe[ins.randB.mBaseAddress] = ins.randB;
+
+                if (ins.effectA != null)
+                    if (sensDedupe.ContainsKey(ins.effectA.mBaseAddress))
+                        ins.effectA = sensDedupe[ins.effectA.mBaseAddress];
+                    else
+                        sensDedupe[ins.effectA.mBaseAddress] = ins.effectA;
+
+                if (ins.effectB != null)
+                    if (sensDedupe.ContainsKey(ins.effectB.mBaseAddress))
+                        ins.effectB = sensDedupe[ins.effectB.mBaseAddress];
+                    else
+                        sensDedupe[ins.effectB.mBaseAddress] = ins.effectB;
+
+            }
+            foreach (KeyValuePair<int, JInstrumentOscillatorv1> b in oscDedupe)
+                Oscillators.Add(b.Value);
+            foreach (KeyValuePair<int, JInstrumentSenseEffectv1> b in sensDedupe)
+                SensorEffects.Add(b.Value);
+            foreach (KeyValuePair<int, JInstrumentRandEffectv1> b in randDedupe)
+                RandomEffects.Add(b.Value);
+            foreach (KeyValuePair<int, JInstrumentEnvelopev1> b in envDedupe)
+                Envelopes.Add(b.Value);
         }
 
         public static JInstrumentBankv1 CreateFromStream(BeBinaryReader reader)
@@ -83,7 +166,9 @@ namespace jam.jaudio
 
         private void loadFromStream(BeBinaryReader reader)
         {
+    
             var origPos = reader.BaseStream.Position;
+            mBaseAddress = (int)origPos;
             int count = 0;
             while (reader.ReadUInt16() < 0xB) {
                 reader.ReadUInt32();
@@ -103,6 +188,7 @@ namespace jam.jaudio
         }
         public void WriteToStream(BeBinaryWriter wr)
         {
+            mBaseAddress = (int)wr.BaseStream.Position;
             var remainingLength = 32;
             for (int i=0; i < points.Length;i++)
             {
@@ -159,6 +245,7 @@ namespace jam.jaudio
 
         public void WriteToStream(BeBinaryWriter wr)
         {
+            mBaseAddress = (int)wr.BaseStream.Position;
             wr.Write(Target);
             wr.Write(new byte[0x3]);
             wr.Write(Rate);
@@ -184,6 +271,7 @@ namespace jam.jaudio
 
         private void loadFromStream(BeBinaryReader reader)
         {
+            mBaseAddress = (int)reader.BaseStream.Position;
             Target = reader.ReadByte();
             Register = reader.ReadByte();
             Key = reader.ReadByte();
@@ -210,6 +298,7 @@ namespace jam.jaudio
 
         private void loadFromStream(BeBinaryReader reader)
         {
+            mBaseAddress= (int)reader.BaseStream.Position;
             Target = reader.ReadByte();
             reader.ReadBytes(3);
             Floor = reader.ReadSingle();
@@ -264,7 +353,7 @@ namespace jam.jaudio
 
         private void loadFromStream(BeBinaryReader reader, int seekbase)
         {
-
+            mBaseAddress = (int)reader.BaseStream.Position;
             reader.ReadUInt32(); // Empty 
             Pitch = reader.ReadSingle();
             Volume = reader.ReadSingle();
@@ -322,6 +411,7 @@ namespace jam.jaudio
 
         public void WritetoStream(BeBinaryWriter wr)
         {
+            mBaseAddress = (int)wr.BaseStream.Position;
             wr.Write(INST);
             wr.Write(0);
             wr.Write(Pitch);
