@@ -30,7 +30,6 @@ namespace jam.jaudio
 
         public void loadFromStream(BeBinaryReader reader)
         {
-            Console.WriteLine("BANK PARSE FROM STREAM");
             int mountpos = (int)reader.BaseStream.Position;
             if (reader.ReadUInt32() != IBNK)
                 throw new InvalidDataException("Data is not IBNK!");

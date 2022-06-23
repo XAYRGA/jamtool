@@ -76,7 +76,6 @@ namespace jam
                         currentEditor.Size = new System.Drawing.Size(576, 741);
                         currentEditor.TabIndex = 2;
 
-                        Console.WriteLine("BANK SELECTED");
                         currentEditor.Show();
                         mnuLayoutPanel.Controls.Add(currentEditor);
 

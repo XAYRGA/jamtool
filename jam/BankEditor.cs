@@ -114,6 +114,7 @@ namespace jam
         {
             if (currentVector == null)
                 return;
+            Console.WriteLine("ow my balls.");
             currentVector.Mode = (ushort)(currentVector.Mode < 4 ? currentVector.Mode : currentVector.Mode + 9);
         }
 
